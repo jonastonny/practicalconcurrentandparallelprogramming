@@ -116,4 +116,4 @@ sys	0m1.480s
 
 2.4.7
 Code: See TestCache.java
-JLO: Kør tid på den
+JLO: Kør ti' på 'en
