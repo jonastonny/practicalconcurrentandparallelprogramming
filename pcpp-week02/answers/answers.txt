@@ -70,3 +70,45 @@ The result is a fixed snapshot
 Code: See SimpleHistogram.java
 
 2.4.1
+
+
+2.4.2
+class Memoizer1
+115000
+
+real	0m16.135s
+user	0m16.363s
+sys		0m0.452s
+
+2.4.3
+class Memoizer2
+224838
+
+real	0m8.858s
+user	0m56.589s
+sys		0m0.184s
+
+2.4.4
+class Memoizer3
+117192
+
+real	0m7.304s
+user	0m22.164s
+sys		0m1.346s
+
+2.4.5
+class Memoizer4
+115000
+
+real	0m7.276s
+user	0m21.817s
+sys		0m1.222s
+
+2.4.6
+class Memoizer5
+115000
+
+real	0m7.377s
+user	0m21.995s
+sys	0m1.480s
+
