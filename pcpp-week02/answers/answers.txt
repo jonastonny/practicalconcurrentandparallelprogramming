@@ -70,7 +70,7 @@ The result is a fixed snapshot
 Code: See SimpleHistogram.java
 
 2.4.1
-
+Code: See TestCache.java
 
 2.4.2
 class Memoizer1
@@ -87,6 +87,8 @@ class Memoizer2
 real	0m8.858s
 user	0m56.589s
 sys		0m0.184s
+
+
 
 2.4.4
 class Memoizer3
@@ -112,3 +114,6 @@ real	0m7.377s
 user	0m21.995s
 sys	0m1.480s
 
+2.4.7
+Code: See TestCache.java
+JLO: Kør tid på den

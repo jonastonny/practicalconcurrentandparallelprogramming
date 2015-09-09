@@ -17,7 +17,7 @@ public class TestCache {
         // cachingFactorizer = factorizer;
 
         Factorizer f = new Factorizer();
-        exerciseFactorizer(new Memoizer<Long, long[]>(f));
+        exerciseFactorizer(new Memoizer0<Long, long[]>(f));
         System.out.println(f.getCount());
 
         //long p = 71827636563813227L;
@@ -125,12 +125,17 @@ class Memoizer0 <A, V> implements Computable<A, V> {
 
     public Memoizer0(Computable<A, V> c) { this.c = c; }
 
-    public V compute(A arg) throws InterruptedException {
-        V result = cache.get(arg);
-        if (result == null) {
-            result = cache.computeIfAbsent(arg, c);
-        }
-        return result;
+    @Override
+    public V compute(A arg) throws InterruptedException {   
+        return cache.computeIfAbsent(arg, (k) -> {
+                try {
+                    return c.compute(k);
+                } catch (InterruptedException ex) {
+                    System.err.print("Ooops");
+                }
+                return null;
+            }
+        );
     }
 }
 
