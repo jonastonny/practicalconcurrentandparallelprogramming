@@ -69,7 +69,7 @@ class TestCountFactors {
             return atomicInt.get();
     }
 
-  public static int countFactors(int p) {
+  public static int countFactors(long p) {
     if (p < 2) 
       return 0;
     int factorCount = 1, k = 2;

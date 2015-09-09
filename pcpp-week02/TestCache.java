@@ -12,24 +12,30 @@ import java.util.function.Function;
 
 public class TestCache {
   public static void main(String[] args) throws InterruptedException {
-    Computable<Long, long[]> factorizer = new Factorizer(),
-      cachingFactorizer = new Memoizer5<Long,long[]>(factorizer);
+    //Computable<Long, long[]> factorizer = new Factorizer(),
+    //cachingFactorizer = new Memoizer5<Long,long[]>(factorizer);
     // cachingFactorizer = factorizer;
+
+    Factorizer f = new Factorizer();
+    exerciseFactorizer(new Memoizer1<Long, long[]>(f));
+    System.out.println(f.getCount());
     
-    long p = 71827636563813227L;
+    //long p = 71827636563813227L;
 
-    print(factorizer.compute(p));
+    //print(factorizer.compute(p));
 
-    long[] factors = cachingFactorizer.compute(p);
-    print(factors);
+    //long[] factors = cachingFactorizer.compute(p);
+    //print(factors);
 
-    print(cachingFactorizer.compute(p));
-    print(cachingFactorizer.compute(p));
-    print(cachingFactorizer.compute(p));
-    print(cachingFactorizer.compute(p));
-    print(cachingFactorizer.compute(p));
-    print(cachingFactorizer.compute(p));
-    print(cachingFactorizer.compute(p));
+//    print(cachingFactorizer.compute(p));
+//    print(cachingFactorizer.compute(p));
+//    print(cachingFactorizer.compute(p));
+//    print(cachingFactorizer.compute(p));
+//    print(cachingFactorizer.compute(p));
+//    print(cachingFactorizer.compute(p));
+//    print(cachingFactorizer.compute(p));
+//      print(cachingFactorizer.exerciseFactorizer(p));
+    
   }
 
   private static void print(long[] arr) {
@@ -37,6 +43,37 @@ public class TestCache {
       System.out.print(" " + x);
     System.out.println();
   }
+
+  private static void exerciseFactorizer(Computable<Long, long[]> f) {
+        final int threadCount = 16;
+        final long start = 10_000_000_000L, range = 20_000L;
+
+        final long from1 = start;
+        final long to1 = from1+range;
+
+
+        Thread[] threads = new Thread[threadCount];
+        
+        for (int t=0; t<threadCount; t++) {
+       
+            long from2 = start+range+t*range/4;
+            long to2 = from2+range;
+            
+            threads[t] = new Thread(() -> {
+            for (long i=from1; i<to1; i++)
+                TestCountFactors.countFactors(i);
+            });
+        }
+  
+        for (int t=0; t<threadCount; t++) 
+            threads[t].start();
+            try {
+                for (int t=0; t<threadCount; t++) 
+                    {threads[t].join();}
+            } catch (InterruptedException exn) { }
+    
+        System.out.println(f.getClass());
+    }
 }
 
 
@@ -71,14 +108,6 @@ class Factorizer implements Computable<Long, long[]> {
       result[i] = factors.get(i);
     return result;
   }
-
-    private static void exerciseFactorizer(Computable<Long, long[]> f) {
-        final int threadCount = 16;
-        final long start = 10_000_000_000L, range = 20_000L;
-        System.out.println(f.getClass());
-    
-    }
-
 }
 
 
