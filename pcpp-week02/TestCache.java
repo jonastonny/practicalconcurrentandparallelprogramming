@@ -119,13 +119,13 @@ class Factorizer implements Computable<Long, long[]> {
     }
 }
 
+// 2.4.7
 class Memoizer0 <A, V> implements Computable<A, V> {
     private final Map<A, V> cache = new ConcurrentHashMap<A, V>();
     private final Computable<A, V> c;
 
     public Memoizer0(Computable<A, V> c) { this.c = c; }
 
-    @Override
     public V compute(A arg) throws InterruptedException {   
         return cache.computeIfAbsent(arg, (k) -> {
                 try {
