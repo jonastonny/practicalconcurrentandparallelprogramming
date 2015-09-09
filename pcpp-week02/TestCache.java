@@ -128,8 +128,7 @@ class Memoizer0 <A, V> implements Computable<A, V> {
     public V compute(A arg) throws InterruptedException {
         V result = cache.get(arg);
         if (result == null) {
-            result = c.compute(arg);
-            cache.put(arg, result);
+            result = cache.computeIfAbsent(arg, c);
         }
         return result;
     }
