@@ -120,8 +120,11 @@ real	0m7.377s
 user	0m21.995s
 sys	0m1.480s
 
-
-
 2.4.7
 Code: See TestCache.java
-JLO: Kør ti' på 'en
+class Memoizer0
+115000
+
+real	0m7.498s
+user	0m29.567s
+sys	0m0.858s
