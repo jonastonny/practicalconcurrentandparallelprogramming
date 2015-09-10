@@ -35,6 +35,7 @@ public class TestCache {
 //    print(cachingFactorizer.compute(p));
 //    print(cachingFactorizer.compute(p));
 
+
     }
 
     private static void print(long[] arr) {
@@ -125,6 +126,7 @@ class Memoizer0 <A, V> implements Computable<A, V> {
 
     public Memoizer0(Computable<A, V> c) { this.c = c; }
 
+
     public V compute(A arg) throws InterruptedException {   
         return cache.computeIfAbsent(arg, (k) -> {
                 V result = null;
@@ -137,7 +139,9 @@ class Memoizer0 <A, V> implements Computable<A, V> {
             }
         );
     }
+
 }
+
 
 /**
  * Initial cache attempt using HashMap and synchronization;
