@@ -110,6 +110,8 @@ real	0m7.276s
 user	0m21.817s
 sys		0m1.222s
 
+Memoizer4 uses about the same amount of time as Memoizer3 and calls compute exactly 115000 times. This is mainly because Memoizer4 uses the concurrent method putIfAbsent from ConcurrentHashMap.
+
 2.4.6
 class Memoizer5
 115000
@@ -117,6 +119,8 @@ class Memoizer5
 real	0m7.377s
 user	0m21.995s
 sys	0m1.480s
+
+
 
 2.4.7
 Code: See TestCache.java
