@@ -1,4 +1,7 @@
 ANSWERS WEEK 2
+/**
+ * @author Jonas Tonny Nielsen and Jonas Lomholdt
+ */
 
 2.1.1
 Time: 9.52 seconds
