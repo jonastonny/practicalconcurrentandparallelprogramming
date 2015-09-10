@@ -17,7 +17,7 @@ public class TestCache {
         // cachingFactorizer = factorizer;
 
         Factorizer f = new Factorizer();
-        exerciseFactorizer(new Memoizer<Long, long[]>(f));
+        exerciseFactorizer(new Memoizer0<Long, long[]>(f));
         System.out.println(f.getCount());
 
         //long p = 71827636563813227L;
@@ -34,7 +34,7 @@ public class TestCache {
 //    print(cachingFactorizer.compute(p));
 //    print(cachingFactorizer.compute(p));
 //    print(cachingFactorizer.compute(p));
-        // print(cachingFactorizer.exerciseFactorizer(p));
+
 
     }
 
@@ -67,7 +67,7 @@ public class TestCache {
                     for (long j = from2; j < to2; j++) {
                         f.compute(j);
                     }
-                } catch (Exception e) { }
+                } catch (InterruptedException e) { }
             });
         }
 
@@ -119,12 +119,14 @@ class Factorizer implements Computable<Long, long[]> {
     }
 }
 
+// 2.4.7
 class Memoizer0 <A, V> implements Computable<A, V> {
     private final Map<A, V> cache = new ConcurrentHashMap<A, V>();
     private final Computable<A, V> c;
 
     public Memoizer0(Computable<A, V> c) { this.c = c; }
 
+<<<<<<< HEAD
     public V compute(A arg) throws InterruptedException {
         return cache.computeIfAbsent(arg, (k) ->
             {
@@ -134,6 +136,18 @@ class Memoizer0 <A, V> implements Computable<A, V> {
                 // Nothing...
             }
         }
+=======
+    public V compute(A arg) throws InterruptedException {   
+        return cache.computeIfAbsent(arg, (k) -> {
+                V result = null;
+                try {
+                    result = c.compute(k);
+                } catch (InterruptedException ex) {
+                    System.err.print("Ooops");
+                }
+                return result;
+            }
+>>>>>>> upstream/master
         );
     }
 
