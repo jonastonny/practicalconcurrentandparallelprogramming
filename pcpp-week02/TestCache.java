@@ -34,7 +34,7 @@ public class TestCache {
 //    print(cachingFactorizer.compute(p));
 //    print(cachingFactorizer.compute(p));
 //    print(cachingFactorizer.compute(p));
-//    print(cachingFactorizer.exerciseFactorizer(p));
+        // print(cachingFactorizer.exerciseFactorizer(p));
 
     }
 
@@ -126,13 +126,19 @@ class Memoizer0 <A, V> implements Computable<A, V> {
     public Memoizer0(Computable<A, V> c) { this.c = c; }
 
     public V compute(A arg) throws InterruptedException {
-        V result = cache.get(arg);
-        if (result == null) {
-            result = cache.computeIfAbsent(arg, c);
+        return cache.computeIfAbsent(arg, (k) ->
+            {
+            try {
+                c.compute(k);
+            } catch (InterruptedException ex) {
+                // Nothing...
+            }
         }
-        return result;
+        );
     }
+
 }
+
 
 /**
  * Initial cache attempt using HashMap and synchronization;
