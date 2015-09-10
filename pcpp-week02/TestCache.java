@@ -126,17 +126,7 @@ class Memoizer0 <A, V> implements Computable<A, V> {
 
     public Memoizer0(Computable<A, V> c) { this.c = c; }
 
-<<<<<<< HEAD
-    public V compute(A arg) throws InterruptedException {
-        return cache.computeIfAbsent(arg, (k) ->
-            {
-            try {
-                c.compute(k);
-            } catch (InterruptedException ex) {
-                // Nothing...
-            }
-        }
-=======
+
     public V compute(A arg) throws InterruptedException {   
         return cache.computeIfAbsent(arg, (k) -> {
                 V result = null;
@@ -147,7 +137,6 @@ class Memoizer0 <A, V> implements Computable<A, V> {
                 }
                 return result;
             }
->>>>>>> upstream/master
         );
     }
 
