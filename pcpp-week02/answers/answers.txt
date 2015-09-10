@@ -80,6 +80,8 @@ real	0m16.135s
 user	0m16.363s
 sys		0m0.452s
 
+Memoizer1 takes a fair amount of time because the whole cache (HashMap) is only accessed and manipulated inside a synchronized method. This means only thread can access the cache at a time. This does however insure, that no more than 115000 call to compute are made.
+
 2.4.3
 class Memoizer2
 224838
@@ -88,7 +90,7 @@ real	0m8.858s
 user	0m56.589s
 sys		0m0.184s
 
-
+Memoizer2 uses a ConcurrentHashMap. Memoizer2 uses much less timed compared to Memoizer1. However, there's a lot of unnecessary calls to the compute method. This is because Memoizer2's compute method is not synchronized, like we saw in Memoizer1. 
 
 2.4.4
 class Memoizer3
@@ -97,6 +99,8 @@ class Memoizer3
 real	0m7.304s
 user	0m22.164s
 sys		0m1.346s
+
+Memoizer3 uses a little less time and compute is called a little less number of times. This is mainly because of the use of FutureTask which checks if some value is already being calculated or not. Due to unlucky timing we get a total amount of calls to compute close to 115000.
 
 2.4.5
 class Memoizer4

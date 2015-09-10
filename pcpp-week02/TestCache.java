@@ -34,7 +34,6 @@ public class TestCache {
 //    print(cachingFactorizer.compute(p));
 //    print(cachingFactorizer.compute(p));
 //    print(cachingFactorizer.compute(p));
-//    print(cachingFactorizer.exerciseFactorizer(p));
 
     }
 
@@ -67,7 +66,7 @@ public class TestCache {
                     for (long j = from2; j < to2; j++) {
                         f.compute(j);
                     }
-                } catch (Exception e) { }
+                } catch (InterruptedException e) { }
             });
         }
 
@@ -128,12 +127,13 @@ class Memoizer0 <A, V> implements Computable<A, V> {
 
     public V compute(A arg) throws InterruptedException {   
         return cache.computeIfAbsent(arg, (k) -> {
+                V result = null;
                 try {
-                    return c.compute(k);
+                    result = c.compute(k);
                 } catch (InterruptedException ex) {
                     System.err.print("Ooops");
                 }
-                return null;
+                return result;
             }
         );
     }
