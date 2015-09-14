@@ -1,4 +1,7 @@
 ANSWERS WEEK 2
+/**
+ * @author Jonas Tonny Nielsen and Jonas Lomholdt
+ */
 
 2.1.1
 Time: 9.52 seconds
@@ -119,6 +122,8 @@ class Memoizer5
 real	0m7.377s
 user	0m21.995s
 sys	0m1.480s
+
+Just a more modern version og Memoizer4 using the Java 8 specific computeIfAbsent method. No time improvements made. 
 
 2.4.7
 Code: See TestCache.java
