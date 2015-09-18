@@ -1,0 +1,9 @@
+4.1.1
+	Our results are very much like the ones in 'Microbenchmarks'.
+	Most results seems plausible based on the 'Microbencharks'-specifications.
+	No significant surprises where found, though we did reach the 16777216 count
+	in Mark6.
+
+4.1.2
+	Our results are very much like the ones in 'Microbenchmarks'.
+	
