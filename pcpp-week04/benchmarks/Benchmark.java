@@ -6,12 +6,28 @@ import java.util.function.IntToDoubleFunction;
 class Benchmark {
   public static void main(String[] args) {
     SystemInfo();
+<<<<<<< HEAD
     // Mark0();
     // Mark1();
     // Mark2();
     // Mark3();
     // Mark4();
     // Mark5();
+=======
+    // System.out.println("Mark0");
+    // Mark0();
+    // System.out.println("Mark1");
+    // Mark1();
+    // System.out.println("Mark2");
+    // Mark2();
+    // System.out.println("Mark3");
+    // Mark3();
+    // System.out.println("Mark4");
+    // Mark4();
+    // System.out.println("Mark5");
+    // Mark5();
+    // System.out.println("Mark6");
+>>>>>>> d35ff50f2286c86f97330a319ed02d334f5f06ec
     // Mark6("multiply", Benchmark::multiply);
     // Mark7("multiply", Benchmark::multiply);
     MathFunctionBenchmarks();
