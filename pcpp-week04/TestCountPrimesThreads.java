@@ -4,10 +4,7 @@
 // sestoft@itu.dk * 2014-08-31, 2015-09-15
 
 import java.util.function.IntToDoubleFunction;
-<<<<<<< HEAD
-=======
 import java.util.concurrent.atomic.AtomicLong;
->>>>>>> d35ff50f2286c86f97330a319ed02d334f5f06ec
 
 public class TestCountPrimesThreads {
   public static void main(String[] args) {
@@ -15,17 +12,8 @@ public class TestCountPrimesThreads {
     final int range = 100_000;
     // Mark6("countSequential", i -> countSequential(range));
     // Mark6("countParallel", i -> countParallelN(range, 10));
-<<<<<<< HEAD
     Mark7("countSequential", i -> countSequential(range));
-    for (int c=1; c<=100; c++) {
-=======
-    // Mark7("countSequential", i -> countSequential(range));
-<<<<<<< HEAD
     for (int c=1; c<=36; c++) {
->>>>>>> d35ff50f2286c86f97330a319ed02d334f5f06ec
-=======
-    for (int c=1; c<=32; c++) {
->>>>>>> 04aca94f8a4a73e4de1cc978b932282b2d6cb2e0
       final int threadCount = c;
       Mark7(String.format("countParallelLocal %6d", threadCount), 
             i -> countParallelNLocal(range, threadCount));
@@ -52,11 +40,8 @@ public class TestCountPrimesThreads {
   // General parallel solution, using multiple threads
   private static long countParallelN(int range, int threadCount) {
     final int perThread = range / threadCount;
-<<<<<<< HEAD
-    final LongCounter lc = new LongCounter();
-=======
+    //final LongCounter lc = new LongCounter();
     final AtomicLong lc = new AtomicLong();
->>>>>>> d35ff50f2286c86f97330a319ed02d334f5f06ec
     Thread[] threads = new Thread[threadCount];
     for (int t=0; t<threadCount; t++) {
       final int from = perThread * t, 

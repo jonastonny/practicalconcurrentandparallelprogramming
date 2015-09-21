@@ -8,11 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.*;
 import java.util.function.Function;
-<<<<<<< HEAD
-=======
 import java.util.function.IntToDoubleFunction;
-
->>>>>>> 04aca94f8a4a73e4de1cc978b932282b2d6cb2e0
 
 
 public class TestCache {
@@ -21,11 +17,6 @@ public class TestCache {
         //cachingFactorizer = new Memoizer5<Long,long[]>(factorizer);
         // cachingFactorizer = factorizer;
 
-<<<<<<< HEAD
-        Factorizer f = new Factorizer();
-        exerciseFactorizer(new Memoizer0<Long, long[]>(f));
-        System.out.println(f.getCount());
-=======
         // Factorizer f = new Factorizer();
         // exerciseFactorizer(new Memoizer0<Long, long[]>(f));
         // System.out.println(f.getCount());
@@ -37,7 +28,6 @@ public class TestCache {
             exerciseFactorizer(f);
             return factorizer.getCount();
         });
->>>>>>> 04aca94f8a4a73e4de1cc978b932282b2d6cb2e0
 
         //long p = 71827636563813227L;
 
@@ -63,27 +53,22 @@ public class TestCache {
         System.out.println();
     }
 
-<<<<<<< HEAD
-    private static void exerciseFactorizer(Computable<Long, long[]> f) {
-        final int threadCount = 16;
-        final long start = 10_000_000_000L;
-        final long range = 20_000L;
-=======
+
     public static double Mark7(String msg, IntToDoubleFunction f) {
-    int n = 10, count = 1, totalCount = 0;
-    double dummy = 0.0, runningTime = 0.0, st = 0.0, sst = 0.0;
-    do { 
-      count *= 2;
-      st = sst = 0.0;
-      for (int j=0; j<n; j++) {
-        Timer t = new Timer();
-        for (int i=0; i<count; i++) 
-          dummy += f.applyAsDouble(i);
-        runningTime = t.check();
-        double time = runningTime * 1e9 / count;
-        st += time; 
-        sst += time * time;
-        totalCount += count;
+        int n = 10, count = 1, totalCount = 0;
+        double dummy = 0.0, runningTime = 0.0, st = 0.0, sst = 0.0;
+        do { 
+          count *= 2;
+          st = sst = 0.0;
+          for (int j=0; j<n; j++) {
+            Timer t = new Timer();
+            for (int i=0; i<count; i++) 
+              dummy += f.applyAsDouble(i);
+            runningTime = t.check();
+            double time = runningTime * 1e9 / count;
+            st += time; 
+            sst += time * time;
+            totalCount += count;
       }
     } while (runningTime < 0.25 && count < Integer.MAX_VALUE/2);
     double mean = st/n, sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
@@ -95,7 +80,6 @@ public class TestCache {
         final int threadCount = 16;
         final long start = 10_000_000_000L;
         final long range = 2000L;
->>>>>>> 04aca94f8a4a73e4de1cc978b932282b2d6cb2e0
 
         final long from1 = start;
         final long to1 = from1 + range;
