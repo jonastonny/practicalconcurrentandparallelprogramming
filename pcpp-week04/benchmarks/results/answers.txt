@@ -1,0 +1,35 @@
+4.1.1
+	Our results are very much like the ones in 'Microbenchmarks'.
+	Most results seems plausible based on the 'Microbencharks'-specifications.
+	No significant surprises where found, though we did reach the 16777216 count
+	in Mark6.
+
+4.1.2
+	Our results are very much like the ones in 'Microbenchmarks'.
+	In the case of the 'log' calculation, we reached a higher count on both machines, compared to the one in 'Microbenchmarks'. Other than that, the results were as expected.
+
+4.2.1
+	We conductet the tests on two machines, a Mac and a Windows (see specs in seperate files). On the Windows machine we had some strangenesses in the time consumed during the 512-count in the hashCode benchmark, where it used significantly more time than on the Mac. 
+	In count 262144 in the uncontended lock, the Mac again had nice consistent benchmarks where the Windows machine spend additional time.
+
+4.2.2
+	As seen in the results for this excersise we reach almost exactly the same results as in the 'Microbrenchmarks' article, even though we reach a higher count on the 'log' test.
+
+4.3.1
+	OK
+4.3.2
+	OK. See file output-432.eps
+4.3.3
+	// TODO
+4.3.4
+	The performance of AtomicLong compared to LongCounter, is in my case almost exactly the same (see output-434-combined.eps). I see no mentionable performance issues. I would say, that if theres no performance issues, then one should deffinately use the built-in classes and methods, since these are well tested, and we might as well leverage the power of the framework. If I create my own stuff it's prone for error.
+4.3.5
+	
+4.4.1
+4.4.2
+4.4.3
+4.4.4
+4.4.5
+4.4.6
+4.4.7
+4.4.8

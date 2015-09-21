@@ -1,2 +1,2 @@
-Practical Concurrent and Parallel Programming (Autumn 2015)
+# Practical Concurrent and Parallel Programming (Autumn 2015)
 
