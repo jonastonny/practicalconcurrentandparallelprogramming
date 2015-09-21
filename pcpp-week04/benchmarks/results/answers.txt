@@ -22,14 +22,21 @@
 4.3.3
 	// TODO
 4.3.4
-	The performance of AtomicLong compared to LongCounter, is in my case almost exactly the same (see output-434-combined.eps). I see no mentionable performance issues. I would say, that if theres no performance issues, then one should deffinately use the built-in classes and methods, since these are well tested, and we might as well leverage the power of the framework. If I create my own stuff it's prone for error.
+	The performance of AtomicLong compared to LongCounter, is in our case almost exactly the same (see output-434-combined.eps). The AtomicLong version is a tiny bit faster in almost every case. I would say, that if theres no performance issues, then one should deffinately use the built-in classes and methods, since these are well tested, and we might as well leverage the power of the framework. If we create our own stuff it's prone for error.
 4.3.5
-	
+	The performance of the local Long compared to the AtomicLong is almost exactly the same (see output-435.eps). 
 4.4.1
+	Memoizer1	1500094413.6 ns 	 5492380.87		2
 4.4.2
+	Memoizer2	 866315531.3 ns 	39999378.22		2
 4.4.3
+	Memoizer3	 725539074.3 ns 	10312332.41		2
 4.4.4
+	Memoizer4	 708391970.1 ns 	 6798956.49		2
 4.4.5
+	Memoizer5	 710084590.1 ns 	 7859621.87		2
 4.4.6
+	Memoizer0	 724245847.0 ns 	 6774683.85		2
 4.4.7
+	
 4.4.8

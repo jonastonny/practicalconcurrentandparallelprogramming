@@ -13,7 +13,7 @@ public class TestCountPrimesThreads {
     // Mark6("countSequential", i -> countSequential(range));
     // Mark6("countParallel", i -> countParallelN(range, 10));
     // Mark7("countSequential", i -> countSequential(range));
-    for (int c=1; c<=36; c++) {
+    for (int c=1; c<=32; c++) {
       final int threadCount = c;
       Mark7(String.format("countParallelLocal %6d", threadCount), 
             i -> countParallelNLocal(range, threadCount));
@@ -46,10 +46,15 @@ public class TestCountPrimesThreads {
       final int from = perThread * t, 
         to = (t+1==threadCount) ? range : perThread * (t+1); 
       threads[t] = new Thread(new Runnable() { public void run() {
+        // 4.3.5
+        long count = 0;
         for (int i=from; i<to; i++)
           if (isPrime(i))
-            lc.increment();
+            count++;
+            // lc.getAndIncrement();
+        lc.set(count);
       }});
+      return lc.get();
     }
     for (int t=0; t<threadCount; t++) 
       threads[t].start();
