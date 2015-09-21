@@ -6,15 +6,15 @@ import java.util.function.IntToDoubleFunction;
 class Benchmark {
   public static void main(String[] args) {
     SystemInfo();
-    Mark0();
-    Mark1();
-    Mark2();
-    Mark3();
-    Mark4();
-    Mark5();
-    Mark6("multiply", Benchmark::multiply);
+    // Mark0();
+    // Mark1();
+    // Mark2();
+    // Mark3();
+    // Mark4();
+    // Mark5();
+    // Mark6("multiply", Benchmark::multiply);
     // Mark7("multiply", Benchmark::multiply);
-    // MathFunctionBenchmarks();
+    MathFunctionBenchmarks();
     // final java.util.Random rnd = new java.util.Random();
     // final int n = 1638400;
     // Mark8("random_index", i -> rnd.nextInt(n));
