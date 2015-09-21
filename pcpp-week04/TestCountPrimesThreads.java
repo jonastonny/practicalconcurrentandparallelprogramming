@@ -4,6 +4,7 @@
 // sestoft@itu.dk * 2014-08-31, 2015-09-15
 
 import java.util.function.IntToDoubleFunction;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class TestCountPrimesThreads {
   public static void main(String[] args) {
@@ -39,7 +40,7 @@ public class TestCountPrimesThreads {
   // General parallel solution, using multiple threads
   private static long countParallelN(int range, int threadCount) {
     final int perThread = range / threadCount;
-    final LongCounter lc = new LongCounter();
+    final AtomicLong lc = new AtomicLong();
     Thread[] threads = new Thread[threadCount];
     for (int t=0; t<threadCount; t++) {
       final int from = perThread * t, 

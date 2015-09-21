@@ -16,13 +16,15 @@
 	As seen in the results for this excersise we reach almost exactly the same results as in the 'Microbrenchmarks' article, even though we reach a higher count on the 'log' test.
 
 4.3.1
-
-4.3.1
+	OK
 4.3.2
+	OK. See file output-432.eps
 4.3.3
+	// TODO
 4.3.4
+	The performance of AtomicLong compared to LongCounter, is in my case almost exactly the same (see output-434-combined.eps). I see no mentionable performance issues. I would say, that if theres no performance issues, then one should deffinately use the built-in classes and methods, since these are well tested, and we might as well leverage the power of the framework. If I create my own stuff it's prone for error.
 4.3.5
-
+	
 4.4.1
 4.4.2
 4.4.3
