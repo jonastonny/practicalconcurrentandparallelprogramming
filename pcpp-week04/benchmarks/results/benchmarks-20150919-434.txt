@@ -34,7 +34,3 @@ countParallelLocal     29          3201.8 us      24.26        128
 countParallelLocal     30          3210.7 us      33.57        128
 countParallelLocal     31          3210.1 us      40.10        128
 countParallelLocal     32          3230.1 us      41.58        128
-countParallelLocal     33          3247.0 us      47.27        128
-countParallelLocal     34          3257.7 us      39.28        128
-countParallelLocal     35          3285.1 us      25.31        128
-countParallelLocal     36          3306.5 us      37.99        128
