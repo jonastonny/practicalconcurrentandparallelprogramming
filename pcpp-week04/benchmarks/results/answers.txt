@@ -38,5 +38,5 @@
 4.4.6
 	Memoizer0	 724245847.0 ns 	 6774683.85		2
 4.4.7
-	
+	The fastest performing cache implementation in our case is Memoizer4 (see above 4.4.4). 
 4.4.8
