@@ -689,7 +689,7 @@ class StripedWriteMap<K,V> implements OurMap<K,V> {
     final int h = getHash(k), stripe = h % lockCount;
     final Holder<V> old = new Holder<V>();
     ItemNode<K,V>[] bs;
-    int afterSize; 
+    int afterSize = 0; 
     synchronized (locks[stripe]){
       bs = buckets;
       final int hash = h % bs.length;
@@ -698,9 +698,9 @@ class StripedWriteMap<K,V> implements OurMap<K,V> {
       if(!first){
         bs[hash] = new ItemNode<K,V>(k, v, bl);
         afterSize = sizes.incrementAndGet(stripe); // Increment stripe size
-        if (afterSize * lockCount > bs.length) reallocateBuckets(bs); // Is this a deadlock?
       }
     }
+    if (afterSize * lockCount > bs.length) reallocateBuckets(bs); // Is this a deadlock? Fixed :)
     return old.get();
   }
 
