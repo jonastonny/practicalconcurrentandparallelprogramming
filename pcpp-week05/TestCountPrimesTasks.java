@@ -15,12 +15,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.IntToDoubleFunction;
+import java.util.concurrent.atomic.LongAdder;
 
 
 public class TestCountPrimesTasks {
   private static final ExecutorService executor 
-    = Executors.newWorkStealingPool();
-  //  = Executors.newCachedThreadPool();
+    // = Executors.newWorkStealingPool();
+   = Executors.newCachedThreadPool();
   
   public static void main(String[] args) {
     SystemInfo();
@@ -47,8 +49,8 @@ public class TestCountPrimesTasks {
     for (int c=1; c<=100; c++) {
       final int taskCount = c;
       Mark7(String.format("countParTask1 %6d", taskCount), 
-        new IntToDouble() {
-          public double call(int i) { 
+        new IntToDoubleFunction() {
+          public double applyAsDouble(int i) { 
             return countParallelN1(range, taskCount);
           }});
     }
@@ -82,7 +84,7 @@ public class TestCountPrimesTasks {
   // General parallel solution, using multiple (Runnable) tasks
   private static long countParallelN1(int range, int taskCount) {
     final int perTask = range / taskCount;
-    final LongCounter lc = new LongCounter();
+    final LongAdder lc = new LongAdder();
     List<Future<?>> futures = new ArrayList<Future<?>>();
     for (int t=0; t<taskCount; t++) {
       final int from = perTask * t, 
@@ -101,7 +103,7 @@ public class TestCountPrimesTasks {
     } catch (ExecutionException exn) { 
       throw new RuntimeException(exn.getCause()); 
     }
-    return lc.get();
+    return lc.sum();
   }
 
   // General parallel solution, using multiple Callable<Long> tasks
@@ -160,7 +162,7 @@ public class TestCountPrimesTasks {
 
   // NB: Modified to show microseconds instead of nanoseconds
 
-  public static double Mark6(String msg, IntToDouble f) {
+  public static double Mark6(String msg, IntToDoubleFunction f) {
     int n = 10, count = 1, totalCount = 0;
     double dummy = 0.0, runningTime = 0.0, st = 0.0, sst = 0.0;
     do { 
@@ -169,7 +171,7 @@ public class TestCountPrimesTasks {
       for (int j=0; j<n; j++) {
         Timer t = new Timer();
         for (int i=0; i<count; i++) 
-          dummy += f.call(i);
+          dummy += f.applyAsDouble(i);
         runningTime = t.check();
         double time = runningTime * 1e6 / count; // microseconds
         st += time; 
@@ -182,7 +184,7 @@ public class TestCountPrimesTasks {
     return dummy / totalCount;
   }
 
-  public static double Mark7(String msg, IntToDouble f) {
+  public static double Mark7(String msg, IntToDoubleFunction f) {
     int n = 10, count = 1, totalCount = 0;
     double dummy = 0.0, runningTime = 0.0, st = 0.0, sst = 0.0;
     do { 
@@ -191,7 +193,7 @@ public class TestCountPrimesTasks {
       for (int j=0; j<n; j++) {
         Timer t = new Timer();
         for (int i=0; i<count; i++) 
-          dummy += f.call(i);
+          dummy += f.applyAsDouble(i);
         runningTime = t.check();
         double time = runningTime * 1e6 / count; // microseconds
         st += time; 
