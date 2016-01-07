@@ -3,8 +3,19 @@
 
 // Parts of the code are missing.  Your task in the exercises is to
 // write the missing parts.
+// 
+// 
+// Jonas Tonny Nielsen (jtni)
+// Jonas Lomholdt (jlom)
+// 29/10-2015
+ 
 
 import java.util.Random;
+
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.Executors;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,8 +26,19 @@ public class TestStripedMap {
   public static void main(String[] args) {
     SystemInfo();
     testAllMaps();    // Must be run with: java -ea TestStripedMap 
+    testFunctional();
     exerciseAllMaps();
     // timeAllMaps();
+  }
+
+  public static void testFunctional(){
+    // OurMap<Integer, String> map = new WrapConcurrentHashMap<Integer, String>();
+    OurMap<Integer, String> map = new StripedWriteMap<Integer, String>(77,7);
+    System.out.printf("%nParallel functional test: %s%n", map.getClass());
+    final ExecutorService pool = Executors.newCachedThreadPool();
+    new TestContainsPutAbsentRemove(map, 16, 1).test(pool);
+    pool.shutdown();
+    System.out.println("Okay, testFunctional() completed.");
   }
 
   private static void timeAllMaps() {
@@ -127,6 +149,7 @@ public class TestStripedMap {
     assert map.remove(117).equals("C");
     assert !map.containsKey(117);
     assert map.get(117) == null;
+    assert map.remove(117) == null; // Our test for map.remove returning null
     assert map.size() == 1;
     assert map.putIfAbsent(17, "D").equals("B");
     assert map.get(17).equals("B");
@@ -149,14 +172,14 @@ public class TestStripedMap {
     assert map.get(17).equals("B") && map.containsKey(17);
     assert map.get(217).equals("E") && map.containsKey(217);
     assert map.get(34).equals("F") && map.containsKey(34);
-    map.forEach((k, v) -> System.out.printf("%10d maps to %s%n", k, v));    
+    map.forEach((k, v) -> System.out.printf("%10d maps to %s%n", k, v));
   }
 
   private static void testAllMaps() {
-    testMap(new SynchronizedMap<Integer,String>(25));
-    testMap(new StripedMap<Integer,String>(25, 5));
+    // testMap(new SynchronizedMap<Integer,String>(25));
+    // testMap(new StripedMap<Integer,String>(25, 5));
     testMap(new StripedWriteMap<Integer,String>(25, 5));
-    testMap(new WrapConcurrentHashMap<Integer,String>());
+    // testMap(new WrapConcurrentHashMap<Integer,String>());
   }
 
   // --- Benchmarking infrastructure ---
@@ -605,6 +628,7 @@ class StripedWriteMap<K,V> implements OurMap<K,V> {
   private final int lockCount;
   private final Object[] locks;
   private final AtomicIntegerArray sizes;  
+  // private final int[] sizes;  
 
   public StripedWriteMap(int bucketCount, int lockCount) {
     if (bucketCount % lockCount != 0)
@@ -613,6 +637,7 @@ class StripedWriteMap<K,V> implements OurMap<K,V> {
     this.buckets = makeBuckets(bucketCount);
     this.locks = new Object[lockCount];
     this.sizes = new AtomicIntegerArray(lockCount);
+    // this.sizes = new int[lockCount];
     for (int stripe=0; stripe<lockCount; stripe++) 
       this.locks[stripe] = new Object();
   }
@@ -635,6 +660,7 @@ class StripedWriteMap<K,V> implements OurMap<K,V> {
     final int h = getHash(k), stripe = h % lockCount, hash = h % bs.length;
     // The sizes access is necessary for visibility of bs elements
     return sizes.get(stripe) != 0 && ItemNode.search(bs[hash], k, null);
+    // return sizes[stripe] != 0 && ItemNode.search(bs[hash], k, null);
   }
 
   // Return value v associated with key k, or null
@@ -656,7 +682,10 @@ class StripedWriteMap<K,V> implements OurMap<K,V> {
     int count = 0;
     for (int i = 0; i < sizes.length(); i++) {
       count += sizes.get(i);
-    }
+    }    
+    // for (int i = 0; i < sizes.length; i++) {
+    //   count += sizes[i];
+    // }
     return count;
   }
 
@@ -678,6 +707,7 @@ class StripedWriteMap<K,V> implements OurMap<K,V> {
       bs[hash] = new ItemNode<K,V>(k, v, newNode);
       // Write for visibility; increment if k was not already in map
       afterSize = sizes.addAndGet(stripe, newNode == node ? 1 : 0);
+      // afterSize = sizes[stripe]++;
     }
     if (afterSize * lockCount > bs.length)
       reallocateBuckets(bs);
@@ -698,6 +728,7 @@ class StripedWriteMap<K,V> implements OurMap<K,V> {
       if(!first){
         bs[hash] = new ItemNode<K,V>(k, v, bl);
         afterSize = sizes.incrementAndGet(stripe); // Increment stripe size
+        // afterSize = sizes[stripe]++; // Increment stripe size
       }
     }
     if (afterSize * lockCount > bs.length) reallocateBuckets(bs); // Is this a deadlock? Fixed :)
@@ -714,9 +745,10 @@ class StripedWriteMap<K,V> implements OurMap<K,V> {
       final int hash = h % buckets.length;
       final ItemNode<K,V> first = buckets[hash];
       ItemNode<K,V> node = ItemNode.delete(first, k, old);
-      if(node != null){
+      if(old.get() != null){
         bs[hash] = node;
         sizes.decrementAndGet(stripe);
+        // sizes[stripe]--;
       }
     }
     return old.get();
@@ -834,6 +866,100 @@ class StripedWriteMap<K,V> implements OurMap<K,V> {
     public void set(V value) { 
       this.value = value;
     }
+  }
+}
+
+class TestContainsPutAbsentRemove {
+  protected CyclicBarrier startBarrier, stopBarrier;
+  protected final OurMap<Integer, String> map;
+  protected final int threads, nTrials;
+  protected final AtomicInteger sum = new AtomicInteger(0);
+  protected final AtomicIntegerArray countSum;
+  protected final int N = 100;
+
+  public TestContainsPutAbsentRemove(OurMap<Integer, String> map, int threads, int nTrials){
+    this.map = map;
+    this.threads = threads;
+    this.nTrials = nTrials;
+    this.startBarrier = new CyclicBarrier(threads + 1);
+    this.stopBarrier = new CyclicBarrier(threads + 1);
+    countSum = new AtomicIntegerArray(threads);
+  }
+
+  public void test(ExecutorService pool) {
+    try {
+      for (int t = 0; t < threads; t++) {
+        final Integer thread = t;
+        pool.execute(() -> {
+          try {
+            startBarrier.await();
+            int[] counts = new int[threads];
+            for(int j = nTrials; j > 0; j--){
+
+              ThreadLocalRandom rnd = ThreadLocalRandom.current();
+              Integer putKey = rnd.nextInt(N);
+              String putVal = thread+":"+putKey;
+              String putAction = map.put(putKey, putVal);
+              if(putAction == null) { 
+                sum.incrementAndGet();
+                counts[thread]++;
+              }
+              else {
+                counts[thread]++;
+                counts[Integer.parseInt(putAction.split(":")[0])]--;
+              }
+
+              map.containsKey(rnd.nextInt(N));
+
+              Integer putIfAbsentKey = rnd.nextInt(N);
+              String putIfAbsentValue = thread+":"+putIfAbsentKey;
+              String putIfAbsentAction = map.putIfAbsent(putIfAbsentKey, putIfAbsentValue);
+              if(putIfAbsentAction == null){ 
+                sum.incrementAndGet();
+                counts[thread]++;
+              }
+              String removeAction = map.remove(rnd.nextInt(N));
+              if(removeAction != null) {
+                sum.decrementAndGet(); 
+                counts[Integer.parseInt(removeAction.split(":")[0])]--;
+              }
+            }
+            addCountsToSum(counts);
+            stopBarrier.await();
+          } catch(Exception e){
+            throw new RuntimeException(e);
+          }
+        });
+      }
+      startBarrier.await();
+      stopBarrier.await();
+      assert map.size() == sum.get();
+
+      map.forEach((k,v) -> System.out.printf("(%d,%s)%n", k, v));
+      System.out.println(countSum);
+      compareCounts();
+
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void addCountsToSum(int[] arr){
+    for (int i = 0; i < arr.length; i++) {
+      countSum.getAndAdd(i,arr[i]);
+    }
+  }
+
+  private void compareCounts() throws Exception{
+    int[] mapsum = new int[countSum.length()];
+    map.forEach((k,v) -> {
+      Integer i = Integer.parseInt(v.split(":")[0]);
+      mapsum[i]++;
+    });
+    for(int i = 0; i < mapsum.length; i++){
+      if(mapsum[i] != countSum.get(i)) throw new Exception("Array sums doesn't match.");
+    }
+    System.out.println("Comparison completed.");
   }
 }
 

@@ -1,0 +1,3 @@
+a) See erl-color.html // best rendered in browser
+b) See ABC.java
+c) Our {deposit, ±Amount} tuple deposits the amount in one "message pass". If we were to {inspect} first, return {Balance} and then {set, New} balance, we would possibly be updating an old value since the three messages are not executed atomically.

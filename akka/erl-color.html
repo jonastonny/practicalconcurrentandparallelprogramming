@@ -1,0 +1,68 @@
+<style>
+	.send{ color: #0000FF; }
+	.receive{ color: #333399; }
+	.msgs{ color: #660066; }
+	.actors{ color: #008000; }
+	.spawn{ color: #FF0000; }
+	.rest{ /* color: #000000; */ }
+	*{ background-color: #FFFED2;}
+</style>
+
+<pre>
+LEGEND:
+	<span class="send">send</span>, <span class="receive">receive</span>, <span class="msgs">msgs</span>
+	<span class="actors">actors</span>, <span class="spawn">spawn</span>, <span class="rest">rest</span>.
+	
+	-module(helloworld).
+	-export([<span class="actors">start/0</span>,
+		<span class="actors">account/1</span>,<span class="actors">bank/0</span>,<span class="actors">clerk/0</span>]).
+	
+	%% -- BASIC PROCESSING -------------------
+	n2s(N) -> lists:flatten( %% int2string
+	 io_lib:format("~p", [N])). %% HACK!
+	random(N) -> random:uniform(N) div 10.
+	
+	%% -- ACTORS -----------------------------
+	<span class="actors">account(Balance) -></span>
+		<span class="receive">receive</span>
+			<span class="msgs">{deposit,Amount}</span> <span class="receive">-></span>
+				account(Balance+Amount) ;
+				<span class="msgs">{printbalance}</span> <span class="receive">-></span>
+				io:fwrite(n2s(Balance) ++ "\n")
+		<span class="receive">end.</span>
+	
+	<span class="actors">bank() -></span>
+		<span class="receive">receive</span>
+			<span class="msgs">{transfer,Amount,From,To}</span> <span class="receive">-></span>
+				<span class="actors">From</span> <span class="send">!</span> <span class="msgs">{deposit,-Amount}</span>,
+				<span class="actors">To</span> <span class="send">!</span> <span class="msgs">{deposit,+Amount}</span>,
+				<span class="actors">bank()</span>
+		<span class="receive">end.</span>
+	
+	ntransfers(0,_,_,_) -> true;
+	ntransfers(N,Bank,From,To) ->
+		R = random(100),
+		<span class="actors">Bank</span> <span class="send">!</span> <span class="msgs">{transfer,R,From,To}</span>,
+		ntransfers(N-1,Bank,From,To).
+	
+	<span class="actors">clerk() -></span>
+		<span class="receive">receive</span>
+			<span class="msgs">{start,Bank,From,To}</span> <span class="receive">-></span>
+			random:seed(now()),
+			ntransfers(100,Bank,From,To),
+			clerk()
+		<span class="receive">end.</span>
+	
+	<span class="actors">start() -></span>
+		<span class="actors">A1</span> = <span class="spawn">spawn(helloworld,account,[0])</span>,
+		<span class="actors">A2</span> = <span class="spawn">spawn(helloworld,account,[0])</span>,
+		<span class="actors">B1</span> = <span class="spawn">spawn(helloworld,bank,[])</span>,
+		<span class="actors">B2</span> = <span class="spawn">spawn(helloworld,bank,[])</span>,
+		<span class="actors">C1</span> = <span class="spawn">spawn(helloworld,clerk,[])</span>,
+		<span class="actors">C2</span> = <span class="spawn">spawn(helloworld,clerk,[])</span>,
+		<span class="actors">C1</span> <span class="send">!</span> <span class="msgs">{start,B1,A1,A2}</span>,
+		<span class="actors">C2</span> <span class="send">!</span> <span class="msgs">{start,B2,A2,A1}</span>,
+		timer:sleep(1000),
+		<span class="actors">A1</span> <span class="send">!</span> <span class="msgs">{printbalance}</span>,
+		<span class="actors">A2</span> <span class="send">!</span> <span class="msgs">{printbalance}</span>. 
+</pre>
