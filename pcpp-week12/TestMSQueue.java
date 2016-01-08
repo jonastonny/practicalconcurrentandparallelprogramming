@@ -22,6 +22,7 @@ public class TestMSQueue extends Tests {
     parallelTest(new MSQueue<Integer>());
     testQueuePerformanceNTimes(new MSQueue<Integer>(), 8);
     testQueuePerformanceNTimes(new MSQueueRefl<Integer>(), 8);
+    testQueuePerformanceNTimes(new LockingQueue<Integer>(), 8);
     
 
   }
