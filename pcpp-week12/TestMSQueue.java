@@ -7,8 +7,201 @@
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-public class TestMSQueue {
-  public static void main(String[] args) {
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CyclicBarrier;
+import java.util.Random;
+
+import java.util.function.IntToDoubleFunction;
+
+public class TestMSQueue extends Tests {
+  public static void main(String[] args) throws Exception{
+    sequentialTest(new MSQueue<Integer>());
+    parallelTest(new MSQueue<Integer>());
+  }
+
+private static void sequentialTest(UnboundedQueue<Integer> bq) throws Exception {
+    System.out.printf("%nSequential test: %s", bq.getClass());    
+    // assertTrue(bq.isEmpty());
+    // assertTrue(!bq.isFull());
+    bq.enqueue(7); bq.enqueue(9); bq.enqueue(13);
+    // assertTrue(!bq.isEmpty());
+    // assertTrue(bq.isFull());
+    assertEquals(bq.dequeue(), 7);
+    assertEquals(bq.dequeue(), 9);
+    assertEquals(bq.dequeue(), 13);
+    // assertTrue(bq.isEmpty());
+    // assertTrue(!bq.isFull());
+    System.out.println("... passed");
+  }
+
+private static void parallelTest(UnboundedQueue<Integer> bq) throws Exception {
+    System.out.printf("%nParallel test: %s", bq.getClass()); 
+    final ExecutorService pool = Executors.newCachedThreadPool();
+    new PutTakeTest(bq, 17, 100000).test(pool); 
+    pool.shutdown();
+    System.out.println("... passed");
+  }
+
+public static double Mark7(String msg, IntToDoubleFunction f) {
+    int n = 10, count = 1, totalCount = 0;
+    double dummy = 0.0, runningTime = 0.0, st = 0.0, sst = 0.0;
+    do { 
+      count *= 2;
+      st = sst = 0.0;
+      for (int j=0; j<n; j++) {
+        Timer t = new Timer();
+        for (int i=0; i<count; i++) 
+          dummy += f.applyAsDouble(i);
+        runningTime = t.check();
+        double time = runningTime * 1e6 / count; // microseconds
+        st += time; 
+        sst += time * time;
+        totalCount += count;
+      }
+    } while (runningTime < 0.25 && count < Integer.MAX_VALUE/2);
+    double mean = st/n, sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
+    System.out.printf("%-25s %15.1f us %10.2f %10d%n", msg, mean, sdev, count);
+    return dummy / totalCount;
+  }
+
+  private static double timeMap(int threadCount, final UnboundedQueue<Integer> queue) {
+    final int iterations = 5_000_000, perThread = iterations / threadCount;
+    final int range = 200_000;
+    return exerciseMap(threadCount, perThread, range, queue);
+  }
+
+  private static double exerciseMap(int threadCount, int perThread, int range, 
+                                    final UnboundedQueue<Integer> queue) {
+    Thread[] threads = new Thread[threadCount];
+    for (int t=0; t<threadCount; t++) {
+      final int myThread = t;
+      threads[t] = new Thread(() -> {
+        Random random = new Random(37 * myThread + 78);
+        for (int i=0; i<perThread; i++) {
+          Integer key = random.nextInt(range);
+          if (!queue.containsKey(key)) {
+            // Add key with probability 60%
+            if (random.nextDouble() < 0.60) 
+              queue.put(key, Integer.toString(key));
+          } 
+          else // Remove key with probability 2% and reinsert
+            if (random.nextDouble() < 0.02) {
+              queue.remove(key);
+              queue.putIfAbsent(key, Integer.toString(key));
+            }
+        }
+        final AtomicInteger ai = new AtomicInteger();
+        queue.forEach(new Consumer<Integer,String>() { 
+            public void accept(Integer k, String v) {
+              ai.getAndIncrement();
+        }});
+        // System.out.println(ai.intValue() + " " + map.size());
+      });
+    }
+    for (int t=0; t<threadCount; t++) 
+      threads[t].start();
+    map.reallocateBuckets();
+    try {
+      for (int t=0; t<threadCount; t++) 
+        threads[t].join();
+    } catch (InterruptedException exn) { }
+    return map.size();
+  }
+}
+
+class Timer {
+  private long start, spent = 0;
+  public Timer() { play(); }
+  public double check() { return (System.nanoTime()-start+spent)/1e9; }
+  public void pause() { spent += System.nanoTime()-start; }
+  public void play() { start = System.nanoTime(); }
+}
+
+class PutTakeTest extends Tests {
+  // We could use one CyclicBarrier for both starting and stopping,
+  // precisely because it is cyclic, but the code becomes clearer by
+  // separating them:
+  protected CyclicBarrier startBarrier, stopBarrier;
+  protected final UnboundedQueue<Integer> bq;
+  protected final int nTrials, nPairs;
+  protected final AtomicInteger putSum = new AtomicInteger(0);
+  protected final AtomicInteger takeSum = new AtomicInteger(0);
+
+  public PutTakeTest(UnboundedQueue<Integer> bq, int npairs, int ntrials) {
+    this.bq = bq;
+    this.nTrials = ntrials;
+    this.nPairs = npairs;
+    this.startBarrier = new CyclicBarrier(npairs * 2 + 1);
+    this.stopBarrier = new CyclicBarrier(npairs * 2 + 1);
+  }
+  
+  void test(ExecutorService pool) {
+    try {
+      for (int i = 0; i < nPairs; i++) {
+        pool.execute(new Producer());
+        pool.execute(new Consumer());
+      }      
+      startBarrier.await(); // wait for all threads to be ready
+      stopBarrier.await();  // wait for all threads to finish      
+      // assertTrue(bq.isEmpty());
+      assertEquals(putSum.get(), takeSum.get());
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  class Producer implements Runnable {
+    public void run() {
+      try {
+        Random random = new Random();
+        int sum = 0;
+        startBarrier.await();
+        for (int i = nTrials; i > 0; --i) {
+          int item = random.nextInt();
+          bq.enqueue(item);
+          sum += item;
+        }
+        putSum.getAndAdd(sum);
+        stopBarrier.await();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+  
+  class Consumer implements Runnable {
+    public void run() {
+      try {
+        startBarrier.await();
+        int sum = 0;
+        // int times = 0;
+        for (int i = nTrials; i > 0; --i) {
+          Integer take = bq.dequeue();
+          while(take == null){
+            take = bq.dequeue();
+          }
+          sum += take; // bq.take();
+        }
+        takeSum.getAndAdd(sum);
+        stopBarrier.await();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+}
+
+class Tests {
+  public static void assertEquals(int x, int y) throws Exception {
+    if (x != y) 
+      throw new Exception(String.format("ERROR: %d not equal to %d%n", x, y));
+  }
+
+  public static void assertTrue(boolean b) throws Exception {
+    if (!b) 
+      throw new Exception(String.format("ERROR: assertTrue"));
   }
 }
 
