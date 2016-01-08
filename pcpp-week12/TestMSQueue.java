@@ -16,9 +16,14 @@ import java.util.Random;
 import java.util.function.IntToDoubleFunction;
 
 public class TestMSQueue extends Tests {
-  public static void main(String[] args) throws Exception{
+  
+  public static void main(String[] args) throws Exception {
     sequentialTest(new MSQueue<Integer>());
     parallelTest(new MSQueue<Integer>());
+    testQueuePerformanceNTimes(new MSQueue<Integer>(), 8);
+    testQueuePerformanceNTimes(new MSQueueRefl<Integer>(), 8);
+    
+
   }
 
 private static void sequentialTest(UnboundedQueue<Integer> bq) throws Exception {
@@ -39,9 +44,25 @@ private static void sequentialTest(UnboundedQueue<Integer> bq) throws Exception 
 private static void parallelTest(UnboundedQueue<Integer> bq) throws Exception {
     System.out.printf("%nParallel test: %s", bq.getClass()); 
     final ExecutorService pool = Executors.newCachedThreadPool();
-    new PutTakeTest(bq, 17, 100000).test(pool); 
+    new QueueEnqueueTest(bq, 17, 100000).test(pool);
     pool.shutdown();
     System.out.println("... passed");
+  }
+
+private static void testQueuePerformanceNTimes(UnboundedQueue<Integer> bq, int threads){
+      for (int c = 1; c<=threads; c++) {
+      final int threadCount = c;
+      Mark7(String.format("%s %6d",bq.getClass(), threadCount),
+        i -> performanceQueueTest(bq, threadCount, 100000));
+    }
+
+}
+
+private static double performanceQueueTest(UnboundedQueue<Integer> bq, int threadCount, int trials) {
+    final ExecutorService pool = Executors.newCachedThreadPool();
+    new PerformanceQueue(bq, threadCount, trials).test(pool); 
+    pool.shutdown();
+    return 0.0;
   }
 
 public static double Mark7(String msg, IntToDoubleFunction f) {
@@ -66,49 +87,7 @@ public static double Mark7(String msg, IntToDoubleFunction f) {
     return dummy / totalCount;
   }
 
-  private static double timeMap(int threadCount, final UnboundedQueue<Integer> queue) {
-    final int iterations = 5_000_000, perThread = iterations / threadCount;
-    final int range = 200_000;
-    return exerciseMap(threadCount, perThread, range, queue);
-  }
 
-  private static double exerciseMap(int threadCount, int perThread, int range, 
-                                    final UnboundedQueue<Integer> queue) {
-    Thread[] threads = new Thread[threadCount];
-    for (int t=0; t<threadCount; t++) {
-      final int myThread = t;
-      threads[t] = new Thread(() -> {
-        Random random = new Random(37 * myThread + 78);
-        for (int i=0; i<perThread; i++) {
-          Integer key = random.nextInt(range);
-          if (!queue.containsKey(key)) {
-            // Add key with probability 60%
-            if (random.nextDouble() < 0.60) 
-              queue.put(key, Integer.toString(key));
-          } 
-          else // Remove key with probability 2% and reinsert
-            if (random.nextDouble() < 0.02) {
-              queue.remove(key);
-              queue.putIfAbsent(key, Integer.toString(key));
-            }
-        }
-        final AtomicInteger ai = new AtomicInteger();
-        queue.forEach(new Consumer<Integer,String>() { 
-            public void accept(Integer k, String v) {
-              ai.getAndIncrement();
-        }});
-        // System.out.println(ai.intValue() + " " + map.size());
-      });
-    }
-    for (int t=0; t<threadCount; t++) 
-      threads[t].start();
-    map.reallocateBuckets();
-    try {
-      for (int t=0; t<threadCount; t++) 
-        threads[t].join();
-    } catch (InterruptedException exn) { }
-    return map.size();
-  }
 }
 
 class Timer {
@@ -119,7 +98,7 @@ class Timer {
   public void play() { start = System.nanoTime(); }
 }
 
-class PutTakeTest extends Tests {
+class QueueEnqueueTest extends Tests {
   // We could use one CyclicBarrier for both starting and stopping,
   // precisely because it is cyclic, but the code becomes clearer by
   // separating them:
@@ -129,7 +108,7 @@ class PutTakeTest extends Tests {
   protected final AtomicInteger putSum = new AtomicInteger(0);
   protected final AtomicInteger takeSum = new AtomicInteger(0);
 
-  public PutTakeTest(UnboundedQueue<Integer> bq, int npairs, int ntrials) {
+  public QueueEnqueueTest(UnboundedQueue<Integer> bq, int npairs, int ntrials) {
     this.bq = bq;
     this.nTrials = ntrials;
     this.nPairs = npairs;
@@ -144,8 +123,7 @@ class PutTakeTest extends Tests {
         pool.execute(new Consumer());
       }      
       startBarrier.await(); // wait for all threads to be ready
-      stopBarrier.await();  // wait for all threads to finish      
-      // assertTrue(bq.isEmpty());
+      stopBarrier.await();  // wait for all threads to finish
       assertEquals(putSum.get(), takeSum.get());
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -176,13 +154,12 @@ class PutTakeTest extends Tests {
       try {
         startBarrier.await();
         int sum = 0;
-        // int times = 0;
         for (int i = nTrials; i > 0; --i) {
           Integer take = bq.dequeue();
           while(take == null){
             take = bq.dequeue();
           }
-          sum += take; // bq.take();
+          sum += take;
         }
         takeSum.getAndAdd(sum);
         stopBarrier.await();
@@ -191,6 +168,79 @@ class PutTakeTest extends Tests {
       }
     }
   }
+}
+
+
+class PerformanceQueue extends Tests {
+  // We could use one CyclicBarrier for both starting and stopping,
+  // precisely because it is cyclic, but the code becomes clearer by
+  // separating them:
+  protected CyclicBarrier startBarrier, stopBarrier;
+  protected final UnboundedQueue<Integer> bq;
+  protected final int nTrials, nPairs;
+  protected final AtomicInteger putSum = new AtomicInteger(0);
+  protected final AtomicInteger takeSum = new AtomicInteger(0);
+
+  public PerformanceQueue(UnboundedQueue<Integer> bq, int npairs, int ntrials) {
+    this.bq = bq;
+    this.nTrials = ntrials;
+    this.nPairs = npairs;
+    this.startBarrier = new CyclicBarrier(npairs * 2 + 1);
+    this.stopBarrier = new CyclicBarrier(npairs * 2 + 1);
+  }
+  
+  void test(ExecutorService pool) {
+    try {
+      for (int i = 0; i < nPairs; i++) {
+        pool.execute(new Producer());
+        pool.execute(new Consumer());
+      }      
+      startBarrier.await(); // wait for all threads to be ready
+      stopBarrier.await();  // wait for all threads to finish
+      assertEquals(putSum.get(), takeSum.get());
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static boolean isPrime(int n) {
+    int k = 2;
+    while (k * k <= n && n % k != 0)
+      k++;
+    return n >= 2 && k * k > n;
+  }
+
+  class Producer implements Runnable {
+    public void run() {
+      try {
+        startBarrier.await();
+        for (int i = nTrials; i > 0; --i) {
+          if(isPrime(i)){
+            bq.enqueue(i); 
+          } 
+        }
+        stopBarrier.await();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+  
+  class Consumer implements Runnable {
+    public void run() {
+      try {
+        startBarrier.await();
+        for (int i = nTrials; i > 0; --i) {
+          Integer prime = bq.dequeue();
+          if(prime != null && isPrime(prime));
+        }
+        stopBarrier.await();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
 }
 
 class Tests {
