@@ -1,0 +1,26 @@
+Answers
+
+10.2.2
+Based on the output it seems like it produces the correct result.
+
+10.2.6
+Yes.
+
+10.2.7
+We would expect it to transfer bins to itself if it didn't used getAndClear().
+Since it does use getAndClear() the result is all zeros.
+
+10.3.3
+The implementation is exactly the same as in week 8 and only differs according
+to the multiverse API. Since we are pretty sure that the stripe implementation
+is correct we assume that this implementation is also correct.
+
+10.3.5
+One possible solution could be to have the mentioned newBuckets check in the
+updating methods. This could be implemented by checking if newBuckets is null
+before performing the update. If the newBuckets is not null we use the
+multiverse implementation of retry(). This way we are able to block transactions
+from interrupting the reallocateBuckets method while running. However, blocking
+all transactions could waste a lot of time that could be used for computation.
+The alternative is to waste a lot of computations because a reallocation is
+going on, if we were to do it optimistically.

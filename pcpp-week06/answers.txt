@@ -1,0 +1,152 @@
+#Answers
+
+##6.1.2
+It's important to lock stripe s when reading its size, because changes can occur
+during the calculation (put, putIfAbsent, remove).
+
+##6.1.5
+We've tried to implement (1) by synchronizing all stripes in locks.
+This prevents reallocateBuckets to resize buckets, since the method needs all
+stripes in locks to perform reallocation.
+We implemented this version because it seemed to be the most secure way of
+ensuring no changes could occure during runtime.
+
+##6.1.7
+# OS:   Windows 10; 10.0; amd64
+# JVM:  Oracle Corporation; 1.8.0_60
+# CPU:  Intel64 Family 6 Model 42 Stepping 7, GenuineIntel; 4 "cores"
+# Date: 2015-10-07T10:45:36+0200
+SynchronizedMap       16         565060,7 us   11956,17          2
+99992.0
+StripedMap            16         209571,4 us   40268,24          2
+99992.0
+
+# OS:   Mac OS X; 10.11; x86_64
+# JVM:  Oracle Corporation; 1.8.0_60
+# CPU:  null; 8 "cores"
+# Date: 2015-10-07T13:17:41+0200
+SynchronizedMap       16         456286.0 us   14515.28          2
+99992.0
+StripedMap            16          83950.2 us    2191.05          4
+99992.0
+
+We find the results as expected. StripedMap seems several times faster than
+SynchronizedMap.
+StripedMap allows access to the different stripes concurrently which proves to
+be more effecient than just synchronizing each method.
+
+##6.1.8
+We assume that creating stripes for every bucket would consume a lot of memory,
+since you are creating an object for each stripe. If you were to have a huge
+amount of stripes it would simply eat your memory.
+Furthermore, the change of hitting the same stripe at the same time is
+reasonably low when you are having 16 or 32 stripes (at least in this case).
+
+##6.1.9
+The chance of having 16 threads simultaniously accessing 16 different stripes at
+the same time would be very low compared to having 16 threads accessing 32
+stripes, where the chance of hitting a locked stripe is lower.
+
+##6.1.10
+It is important the number of buckets is a multiple of number of stripes because
+we need the keys to consistenly belong to the same stripe, even after
+reallocating buckets.
+
+##6.2.2
+If nothing changed, then the size shouldn't be updated.
+
+##6.2.5
+# OS:   Windows 10; 10.0; amd64
+# JVM:  Oracle Corporation; 1.8.0_60
+# CPU:  Intel64 Family 6 Model 42 Stepping 7, GenuineIntel; 4 "cores"
+# Date: 2015-10-07T12:51:19+0200
+SynchronizedMap       16         555385,6 us   12882,01          2
+99992.0
+StripedMap            16         200317,2 us   44164,20          2
+99992.0
+StripedWriteMap       16         147102,2 us   21174,58          2
+99991.15
+WrapConcHashMap       16         149501,1 us   25319,04          2
+99992.0
+
+# OS:   Mac OS X; 10.11; x86_64
+# JVM:  Oracle Corporation; 1.8.0_60
+# CPU:  null; 8 "cores"
+# Date: 2015-10-07T13:17:41+0200
+SynchronizedMap       16         477974.2 us   28493.27          2
+99992.0
+StripedMap            16          83249.2 us    2170.63          4
+99992.0
+StripedWriteMap       16          42843.7 us    1155.19          8
+99992.0
+WrapConcHashMap       16          43404.4 us    1682.70          8
+99992.0
+
+The results are as expected. WrapConcHashMap are a little slower than
+StripedWriteMap on both systems as expected. However, WrapConcHashMap scales
+better on a system with more cores according to the lecture slides.
+
+##6.2.6
+Optional - not measured.
+
+##6.3.1
+# OS:   Windows 10; 10.0; amd64
+# JVM:  Oracle Corporation; 1.8.0_60
+# CPU:  Intel64 Family 6 Model 42 Stepping 7, GenuineIntel; 4 "cores"
+# Date: 2015-10-07T09:40:39+0200
+current thread hashCode               0,0 us       0,00  134217728
+ThreadLocalRandom                     0,0 us       0,00   67108864
+AtomicLong                       873545,8 us   51346,72          2
+LongAdder                        190399,0 us    7352,70          2
+LongCounter                      540154,7 us  392727,43          2
+NewLongAdder                     372742,3 us   39777,03          2
+NewLongAdderPadded               202305,9 us   15343,05          2
+
+# OS:   Mac OS X; 10.11; x86_64
+# JVM:  Oracle Corporation; 1.8.0_60
+# CPU:  null; 8 "cores"
+# Date: 2015-10-07T13:29:24+0200
+current thread hashCode               0.0 us       0.00  134217728
+ThreadLocalRandom                     0.0 us       0.00   67108864
+AtomicLong                       937749.9 us   25136.09          2
+LongAdder                         56559.0 us     615.50          8
+LongCounter                      549109.7 us  315654.32          2
+NewLongAdder                     441866.9 us   24255.37          2
+NewLongAdderPadded               102290.5 us    8208.56          4
+
+It's noteciable that LongAdder scales way better on the Mac (i7) machine
+compared to the Windows (i5) machine. The documentation states that LongAdder is
+preferable compared to AtomicLong "when multiple threads update a common sum"
+(http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/atomic/LongAdder.
+html, 07-10-2015).
+Otherwise, the results are as expected.
+
+##6.3.2
+# OS:   Windows 10; 10.0; amd64
+# JVM:  Oracle Corporation; 1.8.0_60
+# CPU:  Intel64 Family 6 Model 42 Stepping 7, GenuineIntel; 4 "cores"
+# Date: 2015-10-07T16:25:44+0200
+current thread hashCode               0,0 us       0,00  134217728
+ThreadLocalRandom                     0,0 us       0,00   67108864
+AtomicLong                       873595,5 us   55827,52          2
+LongAdder                        193106,2 us    7703,72          2
+LongCounter                      490377,4 us  371127,14          2
+NewLongAdder                     389119,4 us   35899,42          2
+NewLongAdderPadded               204265,4 us   18097,30          2
+NewLongAdderLessPadded           257570,6 us   46957,99          2
+
+# OS:   Mac OS X; 10.11; x86_64
+# JVM:  Oracle Corporation; 1.8.0_60
+# CPU:  null; 8 "cores"
+# Date: 2015-10-07T13:29:24+0200
+current thread hashCode               0.0 us       0.00  134217728
+ThreadLocalRandom                     0.0 us       0.00   67108864
+AtomicLong                       937749.9 us   25136.09          2
+LongAdder                         56559.0 us     615.50          8
+LongCounter                      549109.7 us  315654.32          2
+NewLongAdder                     441866.9 us   24255.37          2
+NewLongAdderPadded               102290.5 us    8208.56          4
+NewLongAdderLessPadded           178466.3 us   17940.65          2
+
+Yes. There's a clear difference on both systems. The NewLongAdderLessPadded is
+slower than the NewLongAdderPadded on both systems.

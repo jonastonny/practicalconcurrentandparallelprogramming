@@ -1,0 +1,30 @@
+# 8.1.1
+The implementation passes the test.
+
+We found that the remove method wasn't tested in the case where it should return null, so we added this as an assertion.
+
+# 8.1.2
+The test didn't find any defects in the hash map implementation.
+We only test that the methods do what they are supposed to, but not the correctnes of the maps content.
+The test doesn't tell us anything about containsKey since it's not tested. Since we are using random numbers as keys we can't know which keys are contained in the map and therefore we can't know if a given key is in the map or not. 
+
+# 8.1.3
+No defects found
+
+# 8.1.6
+Since it wasn't mentioned, we added that each thread should run each method nTrials times with a for-loop. This way we get more than 16 puts, putIfAbsents and removes (and containsKeys). We've tried making each thread do this more than a million times. The chance of getting even more interleavings should be higher this way. We also thought about testing the containsKey method.
+
+# 8.2.1
+Our test (from 8.1.5) does indeed discover the lack of synchronization when we remove synchronized from the put method.
+
+# 8.2.2
+If we change what we would lock on. Eg. this instead of locks[stripe], then we also discover improper synchronization. 
+
+# 8.2.3
+After we changed the AtomicIntegerArray to an int[] we got an assertion error related to the test from 8.1.2, where map.size() is not equal to sum.get(). Else, everything seemed fine in our test. However, StripedWriteMap gives us abnormal results in the rest of the provided tests.
+
+# 8.2.4
+Our test didn't catch any faults beside the assertion from 8.1.2 where map.size() is not equal to sum.get() when it should be.
+
+# 8.2.5
+We could test different ways of ensuring thread safeness. Eg.: Removing volatile from the buckets doesn't necessary do any damage, but it's not guaranteed to work every time. 
